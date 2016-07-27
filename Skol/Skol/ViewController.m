@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import <MyoKit/MyoKit.h>
 
 @interface ViewController ()
 
@@ -14,10 +15,66 @@
 
 @implementation ViewController
 
+//myo
+- (void)chooseMyo:(id)sender {
+    // Note that when the settings view controller is presented to the user, it must be in a UINavigationController.
+    UINavigationController *controller = [TLMSettingsViewController settingsInNavigationController];
+    // Present the settings view controller modally.
+    [self presentViewController:controller animated:YES completion:nil];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     self.view.backgroundColor = [UIColor colorWithRed:255/255.0 green:209/255.0 blue:10/255.0 alpha:1];
+    
+    // initialize the socket.io connection
+    [SIOSocket socketWithHost: @"http://simulator.local:3000" response: ^(SIOSocket *socket) {
+        clientSocket = socket;
+    }];
+    
+    // initialize the myo notifications on notification center
+    // Data notifications are received through NSNotificationCenter.
+    // Posted whenever a TLMMyo connects
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didConnectDevice:)
+                                                 name:TLMHubDidConnectDeviceNotification
+                                               object:nil];
+    // Posted whenever a TLMMyo disconnects.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didDisconnectDevice:)
+                                                 name:TLMHubDidDisconnectDeviceNotification
+                                               object:nil];
+    // Posted whenever the user does a successful Sync Gesture.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didSyncArm:)
+                                                 name:TLMMyoDidReceiveArmSyncEventNotification
+                                               object:nil];
+    // Posted whenever Myo loses sync with an arm (when Myo is taken off, or moved enough on the user's arm).
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didUnsyncArm:)
+                                                 name:TLMMyoDidReceiveArmUnsyncEventNotification
+                                               object:nil];
+    // Posted whenever Myo is unlocked and the application uses TLMLockingPolicyStandard.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didUnlockDevice:)
+                                                 name:TLMMyoDidReceiveUnlockEventNotification
+                                               object:nil];
+    // Posted whenever Myo is locked and the application uses TLMLockingPolicyStandard.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didLockDevice:)
+                                                 name:TLMMyoDidReceiveLockEventNotification
+                                               object:nil];
+    // Posted when a new orientation event is available from a TLMMyo. Notifications are posted at a rate of 50 Hz.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didReceiveOrientationEvent:)
+                                                 name:TLMMyoDidReceiveOrientationEventNotification
+                                               object:nil];
+    // Posted when a new pose is available from a TLMMyo.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(didReceivePoseChange:)
+                                                 name:TLMMyoDidReceivePoseChangedNotification
+                                               object:nil];
     
     //------------ APP Título
     
@@ -49,7 +106,6 @@
     txtDanger.textAlignment = NSTextAlignmentLeft;
     txtDanger.font = [UIFont fontWithName:@"Helvetica" size:19];
     [self.view addSubview:txtDanger];
-    
     
     float btnWidth = (self.view.frame.size.width-20-50)/6;
     
@@ -167,6 +223,95 @@
     [self.view addSubview:btnFaceSelector];
      */
     
+}
+
+//myo
+#pragma mark - NSNotificationCenter Methods
+- (void)didConnectDevice:(NSNotification *)notification {
+    
+    NSLog(@"Perform the Sync Gesture");
+    NSLog(@"Hello Myo");
+}
+
+- (void)didDisconnectDevice:(NSNotification *)notification {
+    // Remove the text from our labels when the Myo has disconnected.
+    NSLog(@"Good bye Myo");
+}
+
+- (void)didUnlockDevice:(NSNotification *)notification {
+    // Update the label to reflect Myo's lock state.
+    NSLog(@"Unlocked");
+}
+
+- (void)didLockDevice:(NSNotification *)notification {
+    // Update the label to reflect Myo's lock state.
+    NSLog(@"Locked");
+}
+
+- (void)didSyncArm:(NSNotification *)notification {
+    // Retrieve the arm event from the notification's userInfo with the kTLMKeyArmSyncEvent key.
+    TLMArmSyncEvent *armEvent = notification.userInfo[kTLMKeyArmSyncEvent];
+    // Update the armLabel with arm information.
+    NSString *armString = armEvent.arm == TLMArmRight ? @"Right" : @"Left";
+    NSString *directionString = armEvent.xDirection == TLMArmXDirectionTowardWrist ? @"Toward Wrist" : @"Toward Elbow";
+    NSLog(@"Arm: %@ X-Direction: %@", armString, directionString);
+    NSLog(@"Locked");
+}
+
+- (void)didUnsyncArm:(NSNotification *)notification {
+    // Reset the labels.
+    NSLog(@"Perform the Sync Gesture");
+    NSLog(@"Hello Myo");
+}
+
+- (void)didReceiveOrientationEvent:(NSNotification *)notification {
+    // Retrieve the quaternion w x y z from the myo
+    TLMOrientationEvent *orientationEvent = notification.userInfo[kTLMKeyOrientationEvent];
+    [clientSocket emit:@"quaternion" args:@[[[NSDictionary alloc] initWithObjects:@[[NSString stringWithFormat:@"%f",orientationEvent.quaternion.x],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.y],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.z],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.w]] forKeys:@[@"x",@"y",@"z",@"w"]]]];
+
+}
+
+- (void)didReceivePoseChange:(NSNotification *)notification {
+    // Retrieve the pose from the NSNotification's userInfo with the kTLMKeyPose key.
+    TLMPose *pose = notification.userInfo[kTLMKeyPose];
+    // Handle the cases of the TLMPoseType enumeration, and change the color of helloLabel based on the pose we receive.
+    switch (pose.type) {
+        case TLMPoseTypeUnknown:
+        case TLMPoseTypeRest:
+        case TLMPoseTypeDoubleTap:
+            // Changes helloLabel's font to Helvetica Neue when the user is in a rest or unknown pose.
+            [clientSocket emit:@"double_tap"];
+            break;
+        case TLMPoseTypeFist:
+            // Changes helloLabel's font to Noteworthy when the user is in a fist pose.
+            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"pose",@"fist"] forKeys:@[@"type",@"pose"]]]];
+            break;
+        case TLMPoseTypeWaveIn:
+            // Changes helloLabel's font to Courier New when the user is in a wave in pose.
+            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"Music",@"boom"] forKeys:@[@"animation",@"type"]]]];
+            break;
+        case TLMPoseTypeWaveOut:
+            // Changes helloLabel's font to Snell Roundhand when the user is in a wave out pose.
+            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"Music",@"long_boom"] forKeys:@[@"animation",@"type"]]]];
+            break;
+        case TLMPoseTypeFingersSpread:
+            // Changes helloLabel's font to Chalkduster when the user is in a fingers spread pose.
+            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"pose",@"fingers_spread"] forKeys:@[@"type",@"pose"]]]];
+            break;
+    }
+    
+    // Unlock the Myo whenever we receive a pose
+    if (pose.type == TLMPoseTypeUnknown || pose.type == TLMPoseTypeRest) {
+        // Causes the Myo to lock after a short period.
+        [pose.myo unlockWithType:TLMUnlockTypeTimed];
+    } else {
+        // Keeps the Myo unlocked until specified.
+        // This is required to keep Myo unlocked while holding a pose, but if a pose is not being held, use
+        // TLMUnlockTypeTimed to restart the timer.
+        [pose.myo unlockWithType:TLMUnlockTypeHold];
+        // Indicates that a user action has been performed.
+        [pose.myo indicateUserAction];
+    }
 }
 
 - (void)didReceiveMemoryWarning {

@@ -7,8 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <SIOSocket/SIOSocket.h>
 
-@interface ViewController : UIViewController
+@interface ViewController : UIViewController {
+    SIOSocket *clientSocket;
+}
 
 
 @end
