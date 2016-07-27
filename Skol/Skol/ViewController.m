@@ -21,6 +21,7 @@
     UINavigationController *controller = [TLMSettingsViewController settingsInNavigationController];
     // Present the settings view controller modally.
     [self presentViewController:controller animated:YES completion:nil];
+    
 }
 
 - (void)viewDidLoad {
@@ -29,7 +30,7 @@
     self.view.backgroundColor = [UIColor colorWithRed:255/255.0 green:209/255.0 blue:10/255.0 alpha:1];
     
     // initialize the socket.io connection
-    [SIOSocket socketWithHost: @"http://simulator.local:3000" response: ^(SIOSocket *socket) {
+    [SIOSocket socketWithHost: @"http://192.168.0.110:3000" response: ^(SIOSocket *socket) {
         clientSocket = socket;
     }];
     
@@ -274,6 +275,7 @@
 - (void)didReceivePoseChange:(NSNotification *)notification {
     // Retrieve the pose from the NSNotification's userInfo with the kTLMKeyPose key.
     TLMPose *pose = notification.userInfo[kTLMKeyPose];
+    NSDictionary *args;
     // Handle the cases of the TLMPoseType enumeration, and change the color of helloLabel based on the pose we receive.
     switch (pose.type) {
         case TLMPoseTypeUnknown:
@@ -281,36 +283,32 @@
         case TLMPoseTypeDoubleTap:
             // Changes helloLabel's font to Helvetica Neue when the user is in a rest or unknown pose.
             [clientSocket emit:@"double_tap"];
+            NSLog(@"double_tap");
             break;
         case TLMPoseTypeFist:
             // Changes helloLabel's font to Noteworthy when the user is in a fist pose.
-            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"pose",@"fist"] forKeys:@[@"type",@"pose"]]]];
+            args = [[NSDictionary alloc] initWithObjects:@[@"pose",@"fist"] forKeys:@[@"type",@"pose"]];
+            [clientSocket emit:@"myo" args:@[args]];
+            NSLog(@"fist");
             break;
         case TLMPoseTypeWaveIn:
             // Changes helloLabel's font to Courier New when the user is in a wave in pose.
-            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"Music",@"boom"] forKeys:@[@"animation",@"type"]]]];
+            args = [[NSDictionary alloc] initWithObjects:@[@"Music",@"boom"] forKeys:@[@"animation",@"type"]];
+            [clientSocket emit:@"animation" args:@[args]];
+            NSLog(@"wave_in");
             break;
         case TLMPoseTypeWaveOut:
             // Changes helloLabel's font to Snell Roundhand when the user is in a wave out pose.
-            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"Music",@"long_boom"] forKeys:@[@"animation",@"type"]]]];
+            args = [[NSDictionary alloc] initWithObjects:@[@"Music",@"long_boom"] forKeys:@[@"animation",@"type"]];
+            [clientSocket emit:@"animation" args:@[args]];
+            NSLog(@"wave_out");
             break;
         case TLMPoseTypeFingersSpread:
             // Changes helloLabel's font to Chalkduster when the user is in a fingers spread pose.
-            [clientSocket emit:@"myo" args:@[[[NSDictionary alloc] initWithObjects:@[@"pose",@"fingers_spread"] forKeys:@[@"type",@"pose"]]]];
+            args = [[NSDictionary alloc] initWithObjects:@[@"pose",@"fingers_spread"] forKeys:@[@"type",@"pose"]];
+            [clientSocket emit:@"myo" args:@[args]];
+            NSLog(@"fingers_spread");
             break;
-    }
-    
-    // Unlock the Myo whenever we receive a pose
-    if (pose.type == TLMPoseTypeUnknown || pose.type == TLMPoseTypeRest) {
-        // Causes the Myo to lock after a short period.
-        [pose.myo unlockWithType:TLMUnlockTypeTimed];
-    } else {
-        // Keeps the Myo unlocked until specified.
-        // This is required to keep Myo unlocked while holding a pose, but if a pose is not being held, use
-        // TLMUnlockTypeTimed to restart the timer.
-        [pose.myo unlockWithType:TLMUnlockTypeHold];
-        // Indicates that a user action has been performed.
-        [pose.myo indicateUserAction];
     }
 }
 
