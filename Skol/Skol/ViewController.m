@@ -16,13 +16,101 @@
 @implementation ViewController
 
 //myo
-- (void)chooseMyo:(id)sender {
+- (void)chooseMyo {
     // Note that when the settings view controller is presented to the user, it must be in a UINavigationController.
     UINavigationController *controller = [TLMSettingsViewController settingsInNavigationController];
     // Present the settings view controller modally.
     [self presentViewController:controller animated:YES completion:nil];
+}
+
+- (void)handleSingleTap:(UITapGestureRecognizer *)recognizer {
+    [unicastY resignFirstResponder];
+    [unicastX resignFirstResponder];
+    [unicastCommand resignFirstResponder];
+    [scrollText resignFirstResponder];
+}
+
+
+
+- (void)stopAll:(id)sender {
+   [clientSocket emit:@"freeze"];
+}
+
+- (void)disable:(id)sender {
+    [clientSocket emit:@"animation" args:@[@0xFF]];
+}
+
+- (void)random:(id)sender {
+    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"RandomPosition"] forKeys:@[@"animation"]];
+    [clientSocket emit:@"animation" args:@[args]];
+}
+- (void)calibrate:(id)sender {
+    [clientSocket emit:@"animation" args:@[@0xFE]];
+    NSLog(@"FOI");
+}
+
+- (void)reset:(id)sender {
+    [clientSocket emit:@"animation" args:@[@0xFC]];
+}
+
+- (void)currentZero:(id)sender {
+    [clientSocket emit:@"animation" args:@[@0xFD]];
+}
+
+- (void)autoPilotStatus:(id)sender {
+    if ([sender isOn]) {
+        [clientSocket emit:@"auto_pilot"];
+    } else {
+        [clientSocket emit:@"auto_pilot"];
+    }
+}
+
+
+- (void)angleChange:(UISlider*)sender {
+    NSLog(@"FOI %d",(int)sender.value*40+20);
+}
+
+
+- (void)musicStatus:(id)sender {
+    if ([sender isOn]) {
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Music"] forKeys:@[@"animation"]];
+        [clientSocket emit:@"animation" args:@[args]];
+    } else {
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Music"] forKeys:@[@"animation"]];
+        [clientSocket emit:@"animation" args:@[args]];
+    }
     
 }
+
+- (void)lidarStatus:(id)sender {
+    if ([sender isOn]) {
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Lidar"] forKeys:@[@"animation"]];
+        [clientSocket emit:@"animation" args:@[args]];
+    } else {
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Lidar"] forKeys:@[@"animation"]];
+        [clientSocket emit:@"animation" args:@[args]];
+    }
+    
+}
+
+- (void)myoParear:(id)sender {
+    if ([sender isOn]) {
+        [self chooseMyo];
+    } else {
+        
+    }
+    
+}
+
+- (void)myoJedi:(id)sender {
+    if ([sender isOn]) {
+        [clientSocket emit:@"double_tap"];
+    } else {
+        [clientSocket emit:@"double_tap"];
+    }
+    
+}
+
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -30,7 +118,7 @@
     self.view.backgroundColor = [UIColor colorWithRed:255/255.0 green:209/255.0 blue:10/255.0 alpha:1];
     
     // initialize the socket.io connection
-    [SIOSocket socketWithHost: @"http://192.168.0.110:3000" response: ^(SIOSocket *socket) {
+    [SIOSocket socketWithHost: @"http://192.168.0.114:3000" response: ^(SIOSocket *socket) {
         clientSocket = socket;
     }];
     
@@ -77,17 +165,23 @@
                                                  name:TLMMyoDidReceivePoseChangedNotification
                                                object:nil];
     
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    scrollView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
+    [self.view addSubview:scrollView];
+    
+    
+    
     //------------ APP Título
     
     UIView *titleBox = [[UIView alloc] init];
     titleBox.frame = CGRectMake(0, 0, self.view.frame.size.width, 110);
     titleBox.backgroundColor = [UIColor darkGrayColor];
-    [self.view addSubview:titleBox];
+    [scrollView addSubview:titleBox];
     
     UIView *titleBoxLine = [[UIView alloc] init];
     titleBoxLine.frame = CGRectMake(0, titleBox.frame.size.height, self.view.frame.size.width, 2);
     titleBoxLine.backgroundColor = [UIColor blackColor];
-    [self.view addSubview:titleBoxLine];
+    [scrollView addSubview:titleBoxLine];
     
     UILabel *title = [[UILabel alloc] init];
     title.frame = CGRectMake(0, 10, self.view.frame.size.width, 100);
@@ -95,7 +189,7 @@
     title.textColor = [UIColor whiteColor];
     title.textAlignment = NSTextAlignmentCenter;
     title.font = [UIFont fontWithName:@"Helvetica" size:25];
-    [self.view addSubview:title];
+    [scrollView addSubview:title];
     
     
     //------------ Comandos Admin
@@ -106,71 +200,108 @@
     txtDanger.textColor = [UIColor blackColor];
     txtDanger.textAlignment = NSTextAlignmentLeft;
     txtDanger.font = [UIFont fontWithName:@"Helvetica" size:19];
-    [self.view addSubview:txtDanger];
+    [scrollView addSubview:txtDanger];
+    
     
     float btnWidth = (self.view.frame.size.width-20-50)/6;
     
     UIButton *btnStop = [[UIButton alloc] init];
     btnStop.frame = CGRectMake(10, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
     //btnStop.backgroundColor = [UIColor blackColor];
-    [btnStop setTitle:@"❌" forState:UIControlStateNormal];
+    [btnStop setTitle:@"🚨" forState:UIControlStateNormal];
     btnStop.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:40];
-    [self.view addSubview:btnStop];
+    [btnStop addTarget:self action:@selector(stopAll:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:btnStop];
     
     UIButton *btnDisable = [[UIButton alloc] init];
     btnDisable.frame = CGRectMake(10+btnWidth+10, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
     //btnDisable.backgroundColor = [UIColor blackColor];
     [btnDisable setTitle:@"🌬" forState:UIControlStateNormal];
     btnDisable.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:40];
-    [self.view addSubview:btnDisable];
+    [btnDisable addTarget:self action:@selector(disable:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:btnDisable];
+    
+    UIButton *btnRandom = [[UIButton alloc] init];
+    btnRandom.frame = CGRectMake(10+(btnWidth+10)*2,txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
+    [btnRandom setTitle:@"🎛" forState:UIControlStateNormal];
+    btnRandom.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:40];
+    [btnRandom addTarget:self action:@selector(random:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:btnRandom];
     
     UIButton *btnCalibrate = [[UIButton alloc] init];
-    btnCalibrate.frame = CGRectMake(10+(btnWidth+10)*2, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
+    btnCalibrate.frame = CGRectMake(10+(btnWidth+10)*3, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
     //btnCalibrate.backgroundColor = [UIColor blackColor];
     [btnCalibrate setTitle:@"⚖" forState:UIControlStateNormal];
     btnCalibrate.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:40];
-    [self.view addSubview:btnCalibrate];
+    [btnCalibrate addTarget:self action:@selector(calibrate:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:btnCalibrate];
     
     UIButton *btnReset = [[UIButton alloc] init];
-    btnReset.frame = CGRectMake(10+(btnWidth+10)*3, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
+    btnReset.frame = CGRectMake(10+(btnWidth+10)*4, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
     //btnReset.backgroundColor = [UIColor blackColor];
     [btnReset setTitle:@"🔄" forState:UIControlStateNormal];
     btnReset.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:40];
-    [self.view addSubview:btnReset];
+    [btnReset addTarget:self action:@selector(reset:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:btnReset];
     
     UIButton *btnCurrentZero = [[UIButton alloc] init];
-    btnCurrentZero.frame = CGRectMake(10+(btnWidth+10)*4, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
+    btnCurrentZero.frame = CGRectMake(10+(btnWidth+10)*5, txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
     //btnCurrentZero.backgroundColor = [UIColor blackColor];
     [btnCurrentZero setTitle:@"🏁" forState:UIControlStateNormal];
     btnCurrentZero.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:40];
-    [self.view addSubview:btnCurrentZero];
+    [btnCurrentZero addTarget:self action:@selector(currentZero:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:btnCurrentZero];
     
-    UIButton *btnHalt = [[UIButton alloc] init];
-    btnHalt.frame = CGRectMake(10+(btnWidth+10)*5,txtDanger.frame.origin.y+txtDanger.frame.size.height-5, btnWidth, 40);
-    //btnHalt.backgroundColor = [UIColor blackColor];
-    [btnHalt setTitle:@"💩" forState:UIControlStateNormal];
-    btnHalt.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:40];
-    [self.view addSubview:btnHalt];
+    
+    //------------ Piloto Automático
+    UILabel *txtPilot = [[UILabel alloc] init];
+    txtPilot.frame = CGRectMake(10, btnCurrentZero.frame.origin.y+btnCurrentZero.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtPilot.text = @"Autopilot";
+    txtPilot.textColor = [UIColor blackColor];
+    txtPilot.textAlignment = NSTextAlignmentLeft;
+    txtPilot.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtPilot];
+    
+    UILabel *pilotOn = [[UILabel alloc] init];
+    pilotOn.frame = CGRectMake(10, txtPilot.frame.origin.y+txtPilot.frame.size.height - 5, 50, 30);
+    pilotOn.text = @"Ligar";
+    pilotOn.textColor = [UIColor blackColor];
+    pilotOn.textAlignment = NSTextAlignmentLeft;
+    pilotOn.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:pilotOn];
+    
+    pilotSwitch = [[UISwitch alloc] init];
+    pilotSwitch.frame = CGRectMake(pilotOn.frame.size.width+15, txtPilot.frame.origin.y + txtPilot.frame.size.height - 5, 1, 1);
+    [pilotSwitch addTarget:self action:@selector(autoPilotStatus:) forControlEvents:UIControlEventValueChanged];
+    [scrollView addSubview:pilotSwitch];
+    
+    UILabel *pilotNext = [[UILabel alloc] init];
+    pilotNext.frame = CGRectMake(10, pilotSwitch.frame.origin.y+pilotSwitch.frame.size.height + 10, 90, 30);
+    pilotNext.text = @"> Next: ";
+    pilotNext.textColor = [UIColor darkGrayColor];
+    pilotNext.textAlignment = NSTextAlignmentLeft;
+    pilotNext.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:pilotNext];
     
     
     //------------ Comandos Unicast
     UILabel *txtUnicast = [[UILabel alloc] init];
-    txtUnicast.frame = CGRectMake(10, btnHalt.frame.origin.y+btnHalt.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtUnicast.frame = CGRectMake(10, pilotNext.frame.origin.y+pilotNext.frame.size.height+15, self.view.frame.size.width-20, 50);
     //txtUnicast.backgroundColor = [UIColor grayColor];
     txtUnicast.text = @"Unicast";
     txtUnicast.textColor = [UIColor blackColor];
     txtUnicast.textAlignment = NSTextAlignmentLeft;
     txtUnicast.font = [UIFont fontWithName:@"Helvetica" size:19];
-    [self.view addSubview:txtUnicast];
+    [scrollView addSubview:txtUnicast];
     
     
     NSArray *walls = [[NSArray alloc] initWithObjects:@"top", @"left", @"right", @"front", nil];
-    UISegmentedControl *wallSelector = [[UISegmentedControl alloc] initWithItems:walls];
+    wallSelector = [[UISegmentedControl alloc] initWithItems:walls];
     wallSelector.frame = CGRectMake(10, txtUnicast.frame.origin.y+txtUnicast.frame.size.height-5, 300, 40);
     //wallSelector.backgroundColor = [UIColor blackColor];
-    [self.view addSubview:wallSelector];
+    [scrollView addSubview:wallSelector];
     
-    UITextField *unicastX = [[UITextField alloc] init];
+    unicastX = [[UITextField alloc] init];
     unicastX.frame = CGRectMake(10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, 50, 50);
     unicastX.backgroundColor = [UIColor whiteColor];
     unicastX.textColor = [UIColor darkGrayColor];
@@ -180,9 +311,9 @@
     unicastX.textAlignment = NSTextAlignmentCenter;
     unicastX.layer.borderWidth = 1;
     unicastX.layer.borderColor = [UIColor grayColor].CGColor;
-    [self.view addSubview:unicastX];
+    [scrollView addSubview:unicastX];
     
-    UITextField *unicastY = [[UITextField alloc] init];
+    unicastY = [[UITextField alloc] init];
     unicastY.frame = CGRectMake(10+50+10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, 50, 50);
     unicastY.backgroundColor = [UIColor whiteColor];
     unicastY.textColor = [UIColor darkGrayColor];
@@ -192,9 +323,9 @@
     unicastY.textAlignment = NSTextAlignmentCenter;
     unicastY.layer.borderWidth = 1;
     unicastY.layer.borderColor = [UIColor grayColor].CGColor;
-    [self.view addSubview:unicastY];
+    [scrollView addSubview:unicastY];
     
-    UITextField *unicastCommand = [[UITextField alloc] init];
+    unicastCommand = [[UITextField alloc] init];
     unicastCommand.frame = CGRectMake(10+50+10+50+10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, 70, 50);
     unicastCommand.backgroundColor = [UIColor whiteColor];
     unicastCommand.textColor = [UIColor darkGrayColor];
@@ -204,25 +335,273 @@
     unicastCommand.textAlignment = NSTextAlignmentCenter;
     unicastCommand.layer.borderWidth = 1;
     unicastCommand.layer.borderColor = [UIColor grayColor].CGColor;
-    [self.view addSubview:unicastCommand];
+    [scrollView addSubview:unicastCommand];
     
     UIButton *btnUnicast = [[UIButton alloc] init];
     btnUnicast.frame = CGRectMake(10+50+10+50+10+70+20,wallSelector.frame.origin.y+txtUnicast.frame.size.height+10, 55, 40);
     btnUnicast.backgroundColor = [UIColor blackColor];
     [btnUnicast setTitle:@"GO!" forState:UIControlStateNormal];
     btnUnicast.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
-    [self.view addSubview:btnUnicast];
-
+    [scrollView addSubview:btnUnicast];
     
     
-    /*
-    UIButton *btnFaceSelector = [[UIButton alloc] init];
-    btnFaceSelector.frame = CGRectMake(10+50+10+50+10, txtUnicast.frame.origin.y+txtUnicast.frame.size.height-5, 60, 40);
-    btnFaceSelector.backgroundColor = [UIColor blackColor];
-    [btnFaceSelector setTitle:@"Teto" forState:UIControlStateNormal];
-    btnFaceSelector.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:19];
-    [self.view addSubview:btnFaceSelector];
-     */
+    
+    //------------ Angulos
+    UILabel *txtAngle = [[UILabel alloc] init];
+    txtAngle.frame = CGRectMake(10, btnUnicast.frame.origin.y+btnUnicast.frame.size.height+15, self.view.frame.size.width-20, 50);
+    //txtUnicast.backgroundColor = [UIColor grayColor];
+    txtAngle.text = @"Angles";
+    txtAngle.textColor = [UIColor blackColor];
+    txtAngle.textAlignment = NSTextAlignmentLeft;
+    txtAngle.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtAngle];
+    
+    angles = [[UISlider alloc] init];
+    angles.frame = CGRectMake(10, txtAngle.frame.origin.y+txtAngle.frame.size.height+10 , 240, 10);
+    [angles addTarget:self action:@selector(angleChange:) forControlEvents:UIControlEventValueChanged];
+    [scrollView addSubview:angles];
+    
+    
+    UILabel *txtAngleNumb = [[UILabel alloc] init];
+    txtAngleNumb.frame = CGRectMake(angles.frame.size.width+30, txtAngle.frame.origin.y+txtAngle.frame.size.height-5, 50, 30);
+    //txtAngleNumb.backgroundColor = [UIColor grayColor];
+    txtAngleNumb.text = @"45º";
+    txtAngleNumb.textColor = [UIColor blackColor];
+    txtAngleNumb.textAlignment = NSTextAlignmentLeft;
+    txtAngleNumb.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:txtAngleNumb];
+    
+    
+    //------------ Texto
+    UILabel *txtTexts = [[UILabel alloc] init];
+    txtTexts.frame = CGRectMake(10, angles.frame.origin.y+angles.frame.size.height+15, self.view.frame.size.width-20, 50);
+    //txtTexts.backgroundColor = [UIColor grayColor];
+    txtTexts.text = @"Scroll Text";
+    txtTexts.textColor = [UIColor blackColor];
+    txtTexts.textAlignment = NSTextAlignmentLeft;
+    txtTexts.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtTexts];
+    
+    scrollText = [[UITextField alloc] init];
+    scrollText.frame = CGRectMake(10, txtTexts.frame.origin.y+txtTexts.frame.size.height, 300, 40);
+    scrollText.backgroundColor = [UIColor whiteColor];
+    scrollText.textColor = [UIColor darkGrayColor];
+    scrollText.font = [UIFont fontWithName:@"Helvetica" size:15];
+    scrollText.placeholder = @"Your text here";
+    scrollText.textAlignment = NSTextAlignmentLeft;
+    scrollText.layer.borderWidth = 1;
+    scrollText.layer.borderColor = [UIColor grayColor].CGColor;
+    [scrollView addSubview:scrollText];
+    
+    UILabel *scrollTextSwitchTxt = [[UILabel alloc] init];
+    scrollTextSwitchTxt.frame = CGRectMake(10, scrollText.frame.origin.y+scrollText.frame.size.height + 20, 70, 30);
+    //scrollTextSwitchTxt.backgroundColor = [UIColor grayColor];
+    scrollTextSwitchTxt.text = @"Contínuo";
+    scrollTextSwitchTxt.textColor = [UIColor blackColor];
+    scrollTextSwitchTxt.textAlignment = NSTextAlignmentLeft;
+    scrollTextSwitchTxt.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:scrollTextSwitchTxt];
+    
+    scrollTextSwitch = [[UISwitch alloc] init];
+    scrollTextSwitch.frame = CGRectMake(scrollTextSwitchTxt.frame.size.width+15, scrollText.frame.origin.y + scrollText.frame.size.height + 20, 1, 1);
+    [scrollView addSubview:scrollTextSwitch];
+    
+    UIButton *scrollTextBtn = [[UIButton alloc] init];
+    scrollTextBtn.frame = CGRectMake(scrollTextSwitchTxt.frame.size.width + scrollTextSwitch.frame.size.width + 40, scrollText.frame.origin.y + scrollText.frame.size.height + 15, 55, 40);
+    scrollTextBtn.backgroundColor = [UIColor blackColor];
+    [scrollTextBtn setTitle:@"GO!" forState:UIControlStateNormal];
+    scrollTextBtn.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
+    [scrollView addSubview:scrollTextBtn];
+    
+    
+    //------------ Scoreboard
+    UILabel *txtScoreboard = [[UILabel alloc] init];
+    txtScoreboard.frame = CGRectMake(10, scrollTextBtn.frame.origin.y+scrollTextBtn.frame.size.height+15, self.view.frame.size.width-20, 50);
+    //txtTexts.backgroundColor = [UIColor grayColor];
+    txtScoreboard.text = @"Scoreboard";
+    txtScoreboard.textColor = [UIColor blackColor];
+    txtScoreboard.textAlignment = NSTextAlignmentLeft;
+    txtScoreboard.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtScoreboard];
+    
+    
+    scoreboardTxt1 = [[UITextField alloc] init];
+    scoreboardTxt1.frame = CGRectMake(10, txtScoreboard.frame.origin.y+txtScoreboard.frame.size.height, 300, 40);
+    scoreboardTxt1.backgroundColor = [UIColor whiteColor];
+    scoreboardTxt1.textColor = [UIColor darkGrayColor];
+    scoreboardTxt1.font = [UIFont fontWithName:@"Helvetica" size:15];
+    scoreboardTxt1.placeholder = @"Texto 1";
+    scoreboardTxt1.textAlignment = NSTextAlignmentLeft;
+    scoreboardTxt1.layer.borderWidth = 1;
+    scoreboardTxt1.layer.borderColor = [UIColor grayColor].CGColor;
+    [scrollView addSubview:scoreboardTxt1];
+    
+    scoreboardTxt2 = [[UITextField alloc] init];
+    scoreboardTxt2.frame = CGRectMake(10, scoreboardTxt1.frame.origin.y+scoreboardTxt1.frame.size.height + 10, 300, 40);
+    scoreboardTxt2.backgroundColor = [UIColor whiteColor];
+    scoreboardTxt2.textColor = [UIColor darkGrayColor];
+    scoreboardTxt2.font = [UIFont fontWithName:@"Helvetica" size:15];
+    scoreboardTxt2.placeholder = @"Texto 2";
+    scoreboardTxt2.textAlignment = NSTextAlignmentLeft;
+    scoreboardTxt2.layer.borderWidth = 1;
+    scoreboardTxt2.layer.borderColor = [UIColor grayColor].CGColor;
+    [scrollView addSubview:scoreboardTxt2];
+    
+    scoreboardTxt3 = [[UITextField alloc] init];
+    scoreboardTxt3.frame = CGRectMake(10, scoreboardTxt2.frame.origin.y+scoreboardTxt2.frame.size.height + 10, 300, 40);
+    scoreboardTxt3.backgroundColor = [UIColor whiteColor];
+    scoreboardTxt3.textColor = [UIColor darkGrayColor];
+    scoreboardTxt3.font = [UIFont fontWithName:@"Helvetica" size:15];
+    scoreboardTxt3.placeholder = @"Texto 3";
+    scoreboardTxt3.textAlignment = NSTextAlignmentLeft;
+    scoreboardTxt3.layer.borderWidth = 1;
+    scoreboardTxt3.layer.borderColor = [UIColor grayColor].CGColor;
+    [scrollView addSubview:scoreboardTxt3];
+    
+    scoreboardTxt4 = [[UITextField alloc] init];
+    scoreboardTxt4.frame = CGRectMake(10, scoreboardTxt3.frame.origin.y+scoreboardTxt3.frame.size.height + 10, 300, 40);
+    scoreboardTxt4.backgroundColor = [UIColor whiteColor];
+    scoreboardTxt4.textColor = [UIColor darkGrayColor];
+    scoreboardTxt4.font = [UIFont fontWithName:@"Helvetica" size:15];
+    scoreboardTxt4.placeholder = @"Texto 4";
+    scoreboardTxt4.textAlignment = NSTextAlignmentLeft;
+    scoreboardTxt4.layer.borderWidth = 1;
+    scoreboardTxt4.layer.borderColor = [UIColor grayColor].CGColor;
+    [scrollView addSubview:scoreboardTxt4];
+    
+    UIButton *scrollTextscoreboardBtn = [[UIButton alloc] init];
+    scrollTextscoreboardBtn.frame = CGRectMake(10, scoreboardTxt4.frame.origin.y + scoreboardTxt4.frame.size.height + 15, 55, 40);
+    scrollTextscoreboardBtn.backgroundColor = [UIColor blackColor];
+    [scrollTextscoreboardBtn setTitle:@"GO!" forState:UIControlStateNormal];
+    scrollTextscoreboardBtn.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
+    [scrollView addSubview:scrollTextscoreboardBtn];
+    
+    
+    //------------ Ola
+    UILabel *txtOla = [[UILabel alloc] init];
+    txtOla.frame = CGRectMake(10, scrollTextscoreboardBtn.frame.origin.y+scrollTextscoreboardBtn.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtOla.text = @"Ola";
+    txtOla.textColor = [UIColor blackColor];
+    txtOla.textAlignment = NSTextAlignmentLeft;
+    txtOla.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtOla];
+    
+    NSArray *olas = [[NSArray alloc] initWithObjects:@"45º", @"45º U", nil];
+    olaSelect = [[UISegmentedControl alloc] initWithItems:olas];
+    olaSelect.frame = CGRectMake(10, txtOla.frame.origin.y+txtOla.frame.size.height-5, 300, 40);
+    [scrollView addSubview:olaSelect];
+    
+    
+    //------------ Idle
+    UILabel *txtIdle = [[UILabel alloc] init];
+    txtIdle.frame = CGRectMake(10, olaSelect.frame.origin.y+olaSelect.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtIdle.text = @"Idle";
+    txtIdle.textColor = [UIColor blackColor];
+    txtIdle.textAlignment = NSTextAlignmentLeft;
+    txtIdle.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtIdle];
+    
+    
+    NSArray *idles = [[NSArray alloc] initWithObjects:@"Random", @"Live", @"Linear", nil];
+    idleSelect1 = [[UISegmentedControl alloc] initWithItems:idles];
+    idleSelect1.frame = CGRectMake(10, txtIdle.frame.origin.y+txtIdle.frame.size.height-5, 300, 40);
+    [scrollView addSubview:idleSelect1];
+    
+    NSArray *idles2 = [[NSArray alloc] initWithObjects:@"Breathe", @"Spiral", @"NOT", nil];
+    idleSelect2 = [[UISegmentedControl alloc] initWithItems:idles2];
+    idleSelect2.frame = CGRectMake(10, idleSelect1.frame.origin.y+idleSelect1.frame.size.height + 10, 300, 40);
+    [scrollView addSubview:idleSelect2];
+    
+    
+    //------------ Musica
+    UILabel *txtMusic = [[UILabel alloc] init];
+    txtMusic.frame = CGRectMake(10, idleSelect2.frame.origin.y+idleSelect2.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtMusic.text = @"Music Mode";
+    txtMusic.textColor = [UIColor blackColor];
+    txtMusic.textAlignment = NSTextAlignmentLeft;
+    txtMusic.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtMusic];
+    
+    UILabel *musicBtn = [[UILabel alloc] init];
+    musicBtn.frame = CGRectMake(10, txtMusic.frame.origin.y+txtMusic.frame.size.height - 5, 90, 30);
+    musicBtn.text = @"Let's Shake";
+    musicBtn.textColor = [UIColor blackColor];
+    musicBtn.textAlignment = NSTextAlignmentLeft;
+    musicBtn.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:musicBtn];
+    
+    musicSwitch = [[UISwitch alloc] init];
+    musicSwitch.frame = CGRectMake(musicBtn.frame.size.width+15, txtMusic.frame.origin.y + txtMusic.frame.size.height - 5, 1, 1);
+    [musicSwitch addTarget:self action:@selector(musicStatus:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:musicSwitch];
+    
+    
+    //------------ Lidar
+    UILabel *txtLidar = [[UILabel alloc] init];
+    txtLidar.frame = CGRectMake(10, musicSwitch.frame.origin.y+musicSwitch.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtLidar.text = @"Lidar Mode";
+    txtLidar.textColor = [UIColor blackColor];
+    txtLidar.textAlignment = NSTextAlignmentLeft;
+    txtLidar.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtLidar];
+    
+    UILabel *lidarBtn = [[UILabel alloc] init];
+    lidarBtn.frame = CGRectMake(10, txtLidar.frame.origin.y+txtLidar.frame.size.height - 5, 90, 30);
+    lidarBtn.text = @"Let's Dance";
+    lidarBtn.textColor = [UIColor blackColor];
+    lidarBtn.textAlignment = NSTextAlignmentLeft;
+    lidarBtn.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:lidarBtn];
+    
+    lidarSwitch = [[UISwitch alloc] init];
+    lidarSwitch.frame = CGRectMake(lidarBtn.frame.size.width+15, txtLidar.frame.origin.y + txtLidar.frame.size.height - 5, 1, 1);
+    [lidarSwitch addTarget:self action:@selector(lidarStatus:) forControlEvents:UIControlEventValueChanged];
+    [scrollView addSubview:lidarSwitch];
+    
+    
+    
+    //------------ Myo
+    UILabel *txtMyo = [[UILabel alloc] init];
+    txtMyo.frame = CGRectMake(10, lidarSwitch.frame.origin.y+lidarSwitch.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtMyo.text = @"Myo";
+    txtMyo.textColor = [UIColor blackColor];
+    txtMyo.textAlignment = NSTextAlignmentLeft;
+    txtMyo.font = [UIFont fontWithName:@"Helvetica" size:19];
+    [scrollView addSubview:txtMyo];
+    
+    UILabel *myoParear = [[UILabel alloc] init];
+    myoParear.frame = CGRectMake(10, txtMyo.frame.origin.y+txtMyo.frame.size.height - 5, 90, 30);
+    myoParear.text = @"Parear";
+    myoParear.textColor = [UIColor blackColor];
+    myoParear.textAlignment = NSTextAlignmentLeft;
+    myoParear.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:myoParear];
+    
+    myoSwitch = [[UISwitch alloc] init];
+    myoSwitch.frame = CGRectMake(myoParear.frame.size.width+15, txtMyo.frame.origin.y + txtMyo.frame.size.height - 5, 1, 1);
+    [myoSwitch addTarget:self action:@selector(myoParear:) forControlEvents:UIControlEventValueChanged];
+    [scrollView addSubview:myoSwitch];
+    
+    UILabel *myoFollow = [[UILabel alloc] init];
+    myoFollow.frame = CGRectMake(10, myoSwitch.frame.origin.y+myoSwitch.frame.size.height + 15, 90, 30);
+    myoFollow.text = @"Follow me";
+    myoFollow.textColor = [UIColor blackColor];
+    myoFollow.textAlignment = NSTextAlignmentLeft;
+    myoFollow.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:myoFollow];
+    
+    myoFollowSwitch = [[UISwitch alloc] init];
+    myoFollowSwitch.frame = CGRectMake(myoFollow.frame.size.width+15, myoSwitch.frame.origin.y + myoSwitch.frame.size.height + 15, 1, 1);
+    [myoFollowSwitch addTarget:self action:@selector(myoJedi:) forControlEvents:UIControlEventValueChanged];
+    [scrollView addSubview:myoFollowSwitch];
+    
+    
+    scrollView.contentSize = CGSizeMake(self.view.frame.size.width, myoFollowSwitch.frame.origin.y+myoFollowSwitch.frame.size.height+15);
+    
+    UITapGestureRecognizer *singleFingerTap =
+    [[UITapGestureRecognizer alloc] initWithTarget:self
+                                            action:@selector(handleSingleTap:)];
+    [self.view addGestureRecognizer:singleFingerTap];
     
 }
 
@@ -268,7 +647,9 @@
 - (void)didReceiveOrientationEvent:(NSNotification *)notification {
     // Retrieve the quaternion w x y z from the myo
     TLMOrientationEvent *orientationEvent = notification.userInfo[kTLMKeyOrientationEvent];
-    [clientSocket emit:@"quaternion" args:@[[[NSDictionary alloc] initWithObjects:@[[NSString stringWithFormat:@"%f",orientationEvent.quaternion.x],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.y],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.z],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.w]] forKeys:@[@"x",@"y",@"z",@"w"]]]];
+    if ([myoFollowSwitch isOn]) {
+        [clientSocket emit:@"quaternion" args:@[[[NSDictionary alloc] initWithObjects:@[[NSString stringWithFormat:@"%f",orientationEvent.quaternion.x],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.y],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.z],[NSString stringWithFormat:@"%f",orientationEvent.quaternion.w]] forKeys:@[@"x",@"y",@"z",@"w"]]]];
+    }
 
 }
 
@@ -279,10 +660,14 @@
     // Handle the cases of the TLMPoseType enumeration, and change the color of helloLabel based on the pose we receive.
     switch (pose.type) {
         case TLMPoseTypeUnknown:
+            NSLog(@"unknown");
+            break;
         case TLMPoseTypeRest:
+            NSLog(@"resting");
+            break;
         case TLMPoseTypeDoubleTap:
             // Changes helloLabel's font to Helvetica Neue when the user is in a rest or unknown pose.
-            [clientSocket emit:@"double_tap"];
+            //[clientSocket emit:@"double_tap"];
             NSLog(@"double_tap");
             break;
         case TLMPoseTypeFist:
