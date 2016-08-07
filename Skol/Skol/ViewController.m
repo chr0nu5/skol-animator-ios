@@ -33,7 +33,7 @@
 
 
 - (void)stopAll:(id)sender {
-   [clientSocket emit:@"freeze"];
+   [clientSocket emit:@"stop"];
 }
 
 - (void)disable:(id)sender {
@@ -65,11 +65,108 @@
     }
 }
 
-
-- (void)angleChange:(UISlider*)sender {
-    NSLog(@"FOI %d",(int)sender.value*40+20);
+- (void)unicast:(id)sender {
+    int wall= wallSelector.selectedSegmentIndex;
+    NSString *wallName = @"";
+    if (wall == 0) {
+        wallName = @"roof";
+    } else if (wall == 1) {
+        wallName = @"leftWall";
+    } else if (wall == 2){
+        wallName = @"rightWall";
+    } else if (wall == 3) {
+        wallName = @"frontWall";
+    }
+    NSNumber *x= [NSNumber numberWithInt:[unicastX.text intValue]];
+    NSNumber *y= [NSNumber numberWithInt:[unicastY.text intValue]];
+    NSNumber *command= [NSNumber numberWithInt:[unicastCommand.text intValue]];
+    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[x,y,command, wallName] forKeys:@[@"x",@"y",@"command",@"wall"]];
+    [clientSocket emit:@"unicast" args:@[args]];
 }
 
+
+- (void)angleChange:(UISlider*)sender {
+    int angle = [[NSString stringWithFormat:@"%.0f", sender.value*40 ] intValue];
+    int finalAngle = angle*9;
+    txtAngleNumb.text = [NSString stringWithFormat:@"%dº", finalAngle];
+}
+
+- (void)angle:(id)sender {
+    NSNumber *angle= [NSNumber numberWithInt: [[NSString stringWithFormat:@"%.0f", angles.value*40+20] intValue]];
+    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"BasicAngle", angle] forKeys:@[@"animation", @"angle"]];
+    NSLog(@"%@", args);
+    [clientSocket emit:@"animation" args:@[args]];
+}
+
+- (void)text:(id)sender {
+    NSString *text = scrollText.text;
+    NSDictionary *args;
+    if ([scrollTextSwitch isOn]) {
+        args = [[NSDictionary alloc] initWithObjects:@[@"ScrollText", text, @1] forKeys:@[@"animation", @"message", @"continuous"]];
+    } else {
+        args = [[NSDictionary alloc] initWithObjects:@[@"ScrollText", text, @0] forKeys:@[@"animation", @"message", @"continuous"]];
+    }
+    [clientSocket emit:@"animation" args:@[args]];
+}
+
+
+- (void)scoreboard:(id)sender {
+    NSString *text1 = scoreboardTxt1.text;
+    NSString *text2 = scoreboardTxt2.text;
+    NSString *text3 = scoreboardTxt3.text;
+    NSString *text4 = scoreboardTxt4.text;
+    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"ScoreBoard", text1, text2, text3, text4] forKeys:@[@"animation", @"country1", @"score1", @"country2", @"score2"]];
+    [clientSocket emit:@"animation" args:@[args]];
+}
+
+- (void)ola:(UISegmentedControl*)sender {
+    int olatype= olaSelect.selectedSegmentIndex;
+    NSString *type = @"";
+    if (olatype == 0) {
+        type = @"little";
+    } else if (olatype == 1) {
+        type = @"full";
+    } else if (olatype == 2){
+        type = @"vertical";
+    }
+    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Ola", type] forKeys:@[@"animation",@"type"]];
+    [clientSocket emit:@"animation" args:@[args]];
+}
+
+
+- (void)idle1:(UISegmentedControl*)sender {
+    int idleType= idleSelect1.selectedSegmentIndex;
+    NSString *type = @"";
+    if (idleType == 0) {
+        type = @"shuffle";
+    } else if (idleType == 1) {
+        type = @"live";
+    } else if (idleType == 2){
+        type = @"breathing";
+    } else if (idleType == 3) {
+        type = @"reel";
+    }
+    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Idle", type] forKeys:@[@"animation",@"type"]];
+    [clientSocket emit:@"animation" args:@[args]];
+    
+    [idleSelect2 setSelectedSegmentIndex:UISegmentedControlNoSegment];
+}
+
+- (void)idle2:(UISegmentedControl*)sender {
+    int idleType= idleSelect2.selectedSegmentIndex;
+    NSString *type = @"";
+    if (idleType == 0) {
+        type = @"open";
+    } else if (idleType == 1) {
+        type = @"spiral";
+    } else if (idleType == 2){
+        type = @"brendacadente";
+    }
+    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Idle", type] forKeys:@[@"animation",@"type"]];
+    [clientSocket emit:@"animation" args:@[args]];
+    
+    [idleSelect1 setSelectedSegmentIndex:UISegmentedControlNoSegment];
+}
 
 - (void)musicStatus:(id)sender {
     if ([sender isOn]) {
@@ -84,10 +181,10 @@
 
 - (void)lidarStatus:(id)sender {
     if ([sender isOn]) {
-        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Lidar"] forKeys:@[@"animation"]];
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"enable_lidar", @1] forKeys:@[@"animation", @"enabled"]];
         [clientSocket emit:@"animation" args:@[args]];
     } else {
-        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Lidar"] forKeys:@[@"animation"]];
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"enable_lidar", @0] forKeys:@[@"animation", @"enabled"]];
         [clientSocket emit:@"animation" args:@[args]];
     }
     
@@ -115,11 +212,17 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    self.view.backgroundColor = [UIColor colorWithRed:255/255.0 green:209/255.0 blue:10/255.0 alpha:1];
+    //self.view.backgroundColor = [UIColor colorWithRed:255/255.0 green:209/255.0 blue:10/255.0 alpha:1];
     
     // initialize the socket.io connection
-    [SIOSocket socketWithHost: @"http://192.168.0.114:3000" response: ^(SIOSocket *socket) {
+    [SIOSocket socketWithHost: @"http://127.0.0.1:3000" response: ^(SIOSocket *socket) {
         clientSocket = socket;
+        
+        //check the correct event from the server
+        [clientSocket on:@"statuspilot" callback:^(SIOParameterArray *args) {
+            pilotNext.text = [args firstObject];
+        }];
+        
     }];
     
     // initialize the myo notifications on notification center
@@ -275,12 +378,12 @@
     [pilotSwitch addTarget:self action:@selector(autoPilotStatus:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:pilotSwitch];
     
-    UILabel *pilotNext = [[UILabel alloc] init];
-    pilotNext.frame = CGRectMake(10, pilotSwitch.frame.origin.y+pilotSwitch.frame.size.height + 10, 90, 30);
-    pilotNext.text = @"> Next: ";
+    pilotNext = [[UILabel alloc] init];
+    pilotNext.frame = CGRectMake(10, pilotSwitch.frame.origin.y+pilotSwitch.frame.size.height + 10, self.view.frame.size.width - 20, 30);
+    pilotNext.text = @"Status...";
     pilotNext.textColor = [UIColor darkGrayColor];
     pilotNext.textAlignment = NSTextAlignmentLeft;
-    pilotNext.font = [UIFont fontWithName:@"Helvetica" size:15];
+    pilotNext.font = [UIFont fontWithName:@"Helvetica" size:13];
     [scrollView addSubview:pilotNext];
     
     
@@ -298,7 +401,7 @@
     NSArray *walls = [[NSArray alloc] initWithObjects:@"top", @"left", @"right", @"front", nil];
     wallSelector = [[UISegmentedControl alloc] initWithItems:walls];
     wallSelector.frame = CGRectMake(10, txtUnicast.frame.origin.y+txtUnicast.frame.size.height-5, 300, 40);
-    //wallSelector.backgroundColor = [UIColor blackColor];
+    [wallSelector addTarget:self action:@selector(unicast:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:wallSelector];
     
     unicastX = [[UITextField alloc] init];
@@ -331,7 +434,7 @@
     unicastCommand.textColor = [UIColor darkGrayColor];
     unicastCommand.font = [UIFont fontWithName:@"Helvetica" size:15];
     unicastCommand.keyboardType = UIKeyboardTypeNumberPad;
-    unicastCommand.placeholder = @"0x00";
+    unicastCommand.placeholder = @"20";
     unicastCommand.textAlignment = NSTextAlignmentCenter;
     unicastCommand.layer.borderWidth = 1;
     unicastCommand.layer.borderColor = [UIColor grayColor].CGColor;
@@ -342,6 +445,7 @@
     btnUnicast.backgroundColor = [UIColor blackColor];
     [btnUnicast setTitle:@"GO!" forState:UIControlStateNormal];
     btnUnicast.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
+    [btnUnicast addTarget:self action:@selector(unicast:) forControlEvents:UIControlEventTouchUpInside];
     [scrollView addSubview:btnUnicast];
     
     
@@ -356,20 +460,32 @@
     txtAngle.font = [UIFont fontWithName:@"Helvetica" size:19];
     [scrollView addSubview:txtAngle];
     
+    btnAngle = [[UIButton alloc] init];
+    btnAngle.frame = CGRectMake( self.view.frame.size.width - 55 - 10,txtAngle.frame.origin.y+txtAngle.frame.size.height-10, 55, 40);
+    btnAngle.backgroundColor = [UIColor blackColor];
+    [btnAngle setTitle:@"GO!" forState:UIControlStateNormal];
+    btnAngle.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
+    [btnAngle addTarget:self action:@selector(angle:) forControlEvents:UIControlEventTouchUpInside];
+    [scrollView addSubview:btnAngle];
+    
+    txtAngleNumb = [[UILabel alloc] init];
+    txtAngleNumb.frame = CGRectMake(btnAngle.frame.origin.x - 50 - 10, txtAngle.frame.origin.y+txtAngle.frame.size.height-5, 50, 30);
+    txtAngleNumb.text = @"0º";
+    txtAngleNumb.textColor = [UIColor blackColor];
+    txtAngleNumb.textAlignment = NSTextAlignmentCenter;
+    txtAngleNumb.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [scrollView addSubview:txtAngleNumb];
+    
     angles = [[UISlider alloc] init];
-    angles.frame = CGRectMake(10, txtAngle.frame.origin.y+txtAngle.frame.size.height+10 , 240, 10);
+    angles.frame = CGRectMake(10, txtAngle.frame.origin.y+txtAngle.frame.size.height+6 , txtAngleNumb.frame.origin.x - 10 - 10 , 10);
     [angles addTarget:self action:@selector(angleChange:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:angles];
     
     
-    UILabel *txtAngleNumb = [[UILabel alloc] init];
-    txtAngleNumb.frame = CGRectMake(angles.frame.size.width+30, txtAngle.frame.origin.y+txtAngle.frame.size.height-5, 50, 30);
-    //txtAngleNumb.backgroundColor = [UIColor grayColor];
-    txtAngleNumb.text = @"45º";
-    txtAngleNumb.textColor = [UIColor blackColor];
-    txtAngleNumb.textAlignment = NSTextAlignmentLeft;
-    txtAngleNumb.font = [UIFont fontWithName:@"Helvetica" size:15];
-    [scrollView addSubview:txtAngleNumb];
+  
+    
+    
+    
     
     
     //------------ Texto
@@ -388,6 +504,7 @@
     scrollText.textColor = [UIColor darkGrayColor];
     scrollText.font = [UIFont fontWithName:@"Helvetica" size:15];
     scrollText.placeholder = @"Your text here";
+    scrollText.text = @"Skol";
     scrollText.textAlignment = NSTextAlignmentLeft;
     scrollText.layer.borderWidth = 1;
     scrollText.layer.borderColor = [UIColor grayColor].CGColor;
@@ -406,11 +523,12 @@
     scrollTextSwitch.frame = CGRectMake(scrollTextSwitchTxt.frame.size.width+15, scrollText.frame.origin.y + scrollText.frame.size.height + 20, 1, 1);
     [scrollView addSubview:scrollTextSwitch];
     
-    UIButton *scrollTextBtn = [[UIButton alloc] init];
+    scrollTextBtn = [[UIButton alloc] init];
     scrollTextBtn.frame = CGRectMake(scrollTextSwitchTxt.frame.size.width + scrollTextSwitch.frame.size.width + 40, scrollText.frame.origin.y + scrollText.frame.size.height + 15, 55, 40);
     scrollTextBtn.backgroundColor = [UIColor blackColor];
     [scrollTextBtn setTitle:@"GO!" forState:UIControlStateNormal];
     scrollTextBtn.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
+    [scrollTextBtn addTarget:self action:@selector(text:) forControlEvents:UIControlEventTouchUpInside];
     [scrollView addSubview:scrollTextBtn];
     
     
@@ -474,6 +592,7 @@
     scrollTextscoreboardBtn.backgroundColor = [UIColor blackColor];
     [scrollTextscoreboardBtn setTitle:@"GO!" forState:UIControlStateNormal];
     scrollTextscoreboardBtn.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
+    [scrollTextscoreboardBtn addTarget:self action:@selector(scoreboard:) forControlEvents:UIControlEventTouchUpInside];
     [scrollView addSubview:scrollTextscoreboardBtn];
     
     
@@ -486,9 +605,10 @@
     txtOla.font = [UIFont fontWithName:@"Helvetica" size:19];
     [scrollView addSubview:txtOla];
     
-    NSArray *olas = [[NSArray alloc] initWithObjects:@"45º", @"45º U", nil];
+    NSArray *olas = [[NSArray alloc] initWithObjects:@"45º", @"45º U", @"Vertical", nil];
     olaSelect = [[UISegmentedControl alloc] initWithItems:olas];
     olaSelect.frame = CGRectMake(10, txtOla.frame.origin.y+txtOla.frame.size.height-5, 300, 40);
+    [olaSelect addTarget:self action:@selector(ola:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:olaSelect];
     
     
@@ -502,14 +622,16 @@
     [scrollView addSubview:txtIdle];
     
     
-    NSArray *idles = [[NSArray alloc] initWithObjects:@"Random", @"Live", @"Linear", nil];
+    NSArray *idles = [[NSArray alloc] initWithObjects:@"Random", @"Live", @"Breathe", @"Reel", nil];
     idleSelect1 = [[UISegmentedControl alloc] initWithItems:idles];
     idleSelect1.frame = CGRectMake(10, txtIdle.frame.origin.y+txtIdle.frame.size.height-5, 300, 40);
+    [idleSelect1 addTarget:self action:@selector(idle1:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:idleSelect1];
     
-    NSArray *idles2 = [[NSArray alloc] initWithObjects:@"Breathe", @"Spiral", @"NOT", nil];
+    NSArray *idles2 = [[NSArray alloc] initWithObjects:@"Linear", @"Spiral", @"Brendas", nil];
     idleSelect2 = [[UISegmentedControl alloc] initWithItems:idles2];
     idleSelect2.frame = CGRectMake(10, idleSelect1.frame.origin.y+idleSelect1.frame.size.height + 10, 300, 40);
+    [idleSelect2 addTarget:self action:@selector(idle2:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:idleSelect2];
     
     

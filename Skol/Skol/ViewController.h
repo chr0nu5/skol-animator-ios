@@ -33,6 +33,10 @@
     UISwitch *myoFollowSwitch;
     UISwitch *pilotSwitch;
     UISwitch *lidarSwitch;
+    UILabel *txtAngleNumb;
+    UIButton *btnAngle;
+    UIButton *scrollTextBtn;
+    UILabel *pilotNext;
 }
 
 
