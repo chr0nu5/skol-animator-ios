@@ -31,38 +31,124 @@
 }
 
 
-
 - (void)stopAll:(id)sender {
-   [clientSocket emit:@"stop"];
+   UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL STOP THE CURRENT ANIMATION(S)" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [clientSocket emit:@"stop"];
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+   
 }
 
 - (void)disable:(id)sender {
-    [clientSocket emit:@"animation" args:@[@0xFF]];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL DISABLE ALL MOTORS" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [clientSocket emit:@"animation" args:@[@0xFF]];
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+    
 }
 
 - (void)random:(id)sender {
-    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"RandomPosition"] forKeys:@[@"animation"]];
-    [clientSocket emit:@"animation" args:@[args]];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL ROTATE ALL THE MOTORS TO A RANDOM POSITION" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"RandomPosition"] forKeys:@[@"animation"]];
+        [clientSocket emit:@"animation" args:@[args]];
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
 }
+
 - (void)calibrate:(id)sender {
-    [clientSocket emit:@"animation" args:@[@0xFE]];
-    NSLog(@"FOI");
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL CALIBRATE ALL THE MOTORS" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [clientSocket emit:@"animation" args:@[@0xFE]];
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+    
 }
 
 - (void)reset:(id)sender {
-    [clientSocket emit:@"animation" args:@[@0xFC]];
+   UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL RESET ALL  MOTORS" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [clientSocket emit:@"animation" args:@[@0xFC]];
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+    
 }
 
 - (void)currentZero:(id)sender {
-    [clientSocket emit:@"animation" args:@[@0xFD]];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL SET THE CURRENT ANGLE TO ACT AS ZERO" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [clientSocket emit:@"animation" args:@[@0xFD]];
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+    
 }
 
-- (void)autoPilotStatus:(id)sender {
-    if ([sender isOn]) {
-        [clientSocket emit:@"auto_pilot"];
-    } else {
-        [clientSocket emit:@"auto_pilot"];
-    }
+- (void)autoPilotStatus:(UISwitch*)sender {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL START/STOP AUTOPILOT " preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        
+        if ([sender isOn]) {
+            [clientSocket emit:@"auto_pilot"];
+        } else {
+            [clientSocket emit:@"stop"];
+        }
+        
+    }];
+   
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:^{
+            dispatch_async(dispatch_get_main_queue(), ^{
+            [pilotSwitch setOn:NO];
+            });
+        }];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)unicast:(id)sender {
@@ -120,73 +206,146 @@
 }
 
 - (void)ola:(UISegmentedControl*)sender {
-    int olatype= olaSelect.selectedSegmentIndex;
-    NSString *type = @"";
-    if (olatype == 0) {
-        type = @"little";
-    } else if (olatype == 1) {
-        type = @"full";
-    } else if (olatype == 2){
-        type = @"vertical";
-    }
-    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Ola", type] forKeys:@[@"animation",@"type"]];
-    [clientSocket emit:@"animation" args:@[args]];
+    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL ANIMATE SOMETHING" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        
+        int olatype= olaSelect.selectedSegmentIndex;
+        NSString *type = @"";
+        if (olatype == 0) {
+            type = @"little";
+        } else if (olatype == 1) {
+            type = @"full";
+        } else if (olatype == 2){
+            type = @"vertical";
+        }
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Ola", type] forKeys:@[@"animation",@"type"]];
+        [clientSocket emit:@"animation" args:@[args]];
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+    
+    
 }
 
 
 - (void)idle1:(UISegmentedControl*)sender {
-    int idleType= idleSelect1.selectedSegmentIndex;
-    NSString *type = @"";
-    if (idleType == 0) {
-        type = @"shuffle";
-    } else if (idleType == 1) {
-        type = @"live";
-    } else if (idleType == 2){
-        type = @"breathing";
-    } else if (idleType == 3) {
-        type = @"reel";
-    }
-    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Idle", type] forKeys:@[@"animation",@"type"]];
-    [clientSocket emit:@"animation" args:@[args]];
+   UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL ANIMATE SOMETHING" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        
+        int idleType= idleSelect1.selectedSegmentIndex;
+        NSString *type = @"";
+        if (idleType == 0) {
+            type = @"shuffle";
+        } else if (idleType == 1) {
+            type = @"live";
+        } else if (idleType == 2){
+            type = @"breathing";
+        } else if (idleType == 3) {
+            type = @"reel";
+        }
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Idle", type] forKeys:@[@"animation",@"type"]];
+        [clientSocket emit:@"animation" args:@[args]];
+        
+        [idleSelect2 setSelectedSegmentIndex:UISegmentedControlNoSegment];
+        
+        
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
     
-    [idleSelect2 setSelectedSegmentIndex:UISegmentedControlNoSegment];
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+    
+    
 }
 
 - (void)idle2:(UISegmentedControl*)sender {
-    int idleType= idleSelect2.selectedSegmentIndex;
-    NSString *type = @"";
-    if (idleType == 0) {
-        type = @"open";
-    } else if (idleType == 1) {
-        type = @"spiral";
-    } else if (idleType == 2){
-        type = @"brendacadente";
-    }
-    NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Idle", type] forKeys:@[@"animation",@"type"]];
-    [clientSocket emit:@"animation" args:@[args]];
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL ANIMATE SOMETHING" preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        
+        int idleType= idleSelect2.selectedSegmentIndex;
+        NSString *type = @"";
+        if (idleType == 0) {
+            type = @"open";
+        } else if (idleType == 1) {
+            type = @"spiral";
+        } else if (idleType == 2){
+            type = @"brendacadente";
+        }
+        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Idle", type] forKeys:@[@"animation",@"type"]];
+        [clientSocket emit:@"animation" args:@[args]];
+        
+        [idleSelect1 setSelectedSegmentIndex:UISegmentedControlNoSegment];
+        
+        
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
     
-    [idleSelect1 setSelectedSegmentIndex:UISegmentedControlNoSegment];
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+    
+    
+    
+    
 }
 
 - (void)musicStatus:(id)sender {
-    if ([sender isOn]) {
-        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Music"] forKeys:@[@"animation"]];
-        [clientSocket emit:@"animation" args:@[args]];
-    } else {
-        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Music"] forKeys:@[@"animation"]];
-        [clientSocket emit:@"animation" args:@[args]];
-    }
     
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL START/STOP MUSIC MODE " preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        
+        if ([sender isOn]) {
+            NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"Music", @"equalizer"] forKeys:@[@"animation", @"type"]];
+            [clientSocket emit:@"animation" args:@[args]];
+        } else {
+            [clientSocket emit:@"stop"];
+        }
+        
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
+
 }
 
 - (void)lidarStatus:(id)sender {
-    if ([sender isOn]) {
-        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"enable_lidar", @1] forKeys:@[@"animation", @"enabled"]];
-        [clientSocket emit:@"animation" args:@[args]];
-    } else {
-        NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"enable_lidar", @0] forKeys:@[@"animation", @"enabled"]];
-        [clientSocket emit:@"animation" args:@[args]];
-    }
+    
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL START/STOP LIDAR MODE " preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        
+        if ([sender isOn]) {
+            NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"enable_lidar", @1] forKeys:@[@"animation", @"enabled"]];
+            [clientSocket emit:@"animation" args:@[args]];
+        } else {
+            NSDictionary *args = [[NSDictionary alloc] initWithObjects:@[@"enable_lidar", @0] forKeys:@[@"animation", @"enabled"]];
+            [clientSocket emit:@"animation" args:@[args]];
+        }
+        
+    }];
+    
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"CANCEL" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+        [alert dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alert addAction:ok];
+    [alert addAction:cancel];
+    [self presentViewController:alert animated:YES completion:nil];
     
 }
 
@@ -215,7 +374,7 @@
     //self.view.backgroundColor = [UIColor colorWithRed:255/255.0 green:209/255.0 blue:10/255.0 alpha:1];
     
     // initialize the socket.io connection
-    [SIOSocket socketWithHost: @"http://127.0.0.1:3000" response: ^(SIOSocket *socket) {
+    [SIOSocket socketWithHost: @"http://192.168.42.10:3000" response: ^(SIOSocket *socket) {
         clientSocket = socket;
         
         //check the correct event from the server
