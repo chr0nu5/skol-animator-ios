@@ -14,10 +14,10 @@
 		E233BA161D46DB0E00FD3F0B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E233BA141D46DB0E00FD3F0B /* Main.storyboard */; };
 		E233BA181D46DB0E00FD3F0B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E233BA171D46DB0E00FD3F0B /* Assets.xcassets */; };
 		E233BA1B1D46DB0E00FD3F0B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E233BA191D46DB0E00FD3F0B /* LaunchScreen.storyboard */; };
-		E233BA241D46DFFA00FD3F0B /* skol.png in Resources */ = {isa = PBXBuildFile; fileRef = E233BA231D46DFFA00FD3F0B /* skol.png */; };
 		E233BA281D46EC6300FD3F0B /* MyoKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E233BA271D46EC6200FD3F0B /* MyoKit.framework */; };
 		E24174801D482FA70067AE5A /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E241747F1D482FA70067AE5A /* CoreBluetooth.framework */; };
 		E24174821D482FAC0067AE5A /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E24174811D482FAC0067AE5A /* SystemConfiguration.framework */; };
+		E2EF21A51D5A6F520041227E /* building.png in Resources */ = {isa = PBXBuildFile; fileRef = E2EF21A41D5A6F520041227E /* building.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,10 +34,10 @@
 		E233BA171D46DB0E00FD3F0B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E233BA1A1D46DB0E00FD3F0B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		E233BA1C1D46DB0E00FD3F0B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		E233BA231D46DFFA00FD3F0B /* skol.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = skol.png; sourceTree = "<group>"; };
 		E233BA271D46EC6200FD3F0B /* MyoKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = MyoKit.framework; sourceTree = "<group>"; };
 		E241747F1D482FA70067AE5A /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		E24174811D482FAC0067AE5A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		E2EF21A41D5A6F520041227E /* building.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = building.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,7 +121,7 @@
 		E233BA221D46DFD900FD3F0B /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				E233BA231D46DFFA00FD3F0B /* skol.png */,
+				E2EF21A41D5A6F520041227E /* building.png */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -205,8 +205,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E233BA241D46DFFA00FD3F0B /* skol.png in Resources */,
 				E233BA1B1D46DB0E00FD3F0B /* LaunchScreen.storyboard in Resources */,
+				E2EF21A51D5A6F520041227E /* building.png in Resources */,
 				E233BA181D46DB0E00FD3F0B /* Assets.xcassets in Resources */,
 				E233BA161D46DB0E00FD3F0B /* Main.storyboard in Resources */,
 			);

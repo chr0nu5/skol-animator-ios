@@ -28,6 +28,10 @@
     [unicastX resignFirstResponder];
     [unicastCommand resignFirstResponder];
     [scrollText resignFirstResponder];
+    [scoreboardTxt1 resignFirstResponder];
+    [scoreboardTxt2 resignFirstResponder];
+    [scoreboardTxt3 resignFirstResponder];
+    [scoreboardTxt4 resignFirstResponder];
 }
 
 
@@ -152,7 +156,7 @@
 }
 
 - (void)unicast:(id)sender {
-    int wall= wallSelector.selectedSegmentIndex;
+    int wall= (int)wallSelector.selectedSegmentIndex;
     NSString *wallName = @"";
     if (wall == 0) {
         wallName = @"roof";
@@ -210,7 +214,7 @@
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL ANIMATE SOMETHING" preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
         
-        int olatype= olaSelect.selectedSegmentIndex;
+        int olatype = (int)olaSelect.selectedSegmentIndex;
         NSString *type = @"";
         if (olatype == 0) {
             type = @"little";
@@ -238,7 +242,7 @@
    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL ANIMATE SOMETHING" preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
         
-        int idleType= idleSelect1.selectedSegmentIndex;
+        int idleType= (int)idleSelect1.selectedSegmentIndex;
         NSString *type = @"";
         if (idleType == 0) {
             type = @"shuffle";
@@ -272,7 +276,7 @@
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"CUIDADO" message:@"ARE YOU SURE???? \n\nTHIS WILL ANIMATE SOMETHING" preferredStyle:UIAlertControllerStyleAlert];
     UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
         
-        int idleType= idleSelect2.selectedSegmentIndex;
+        int idleType = (int)idleSelect2.selectedSegmentIndex;
         NSString *type = @"";
         if (idleType == 0) {
             type = @"open";
@@ -371,10 +375,10 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    //self.view.backgroundColor = [UIColor colorWithRed:255/255.0 green:209/255.0 blue:10/255.0 alpha:1];
+    self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
     
     // initialize the socket.io connection
-    [SIOSocket socketWithHost: @"http://192.168.42.10:3000" response: ^(SIOSocket *socket) {
+    [SIOSocket socketWithHost: @"http://192.168.42.10:666" response: ^(SIOSocket *socket) {
         clientSocket = socket;
         
         //check the correct event from the server
@@ -428,16 +432,21 @@
                                                object:nil];
     
     UIScrollView *scrollView = [[UIScrollView alloc] init];
-    scrollView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height);
+    scrollView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height - 70);
+    scrollView.showsVerticalScrollIndicator = NO;
+    scrollView.bounces = NO;
     [self.view addSubview:scrollView];
     
     
     
     //------------ APP Título
     
-    UIView *titleBox = [[UIView alloc] init];
+    UIImageView *titleBox = [[UIImageView alloc] init];
     titleBox.frame = CGRectMake(0, 0, self.view.frame.size.width, 110);
     titleBox.backgroundColor = [UIColor darkGrayColor];
+    [titleBox setImage:[UIImage imageNamed:@"building"]];
+    titleBox.contentMode = UIViewContentModeScaleAspectFill;
+    titleBox.clipsToBounds = YES;
     [scrollView addSubview:titleBox];
     
     UIView *titleBoxLine = [[UIView alloc] init];
@@ -446,11 +455,11 @@
     [scrollView addSubview:titleBoxLine];
     
     UILabel *title = [[UILabel alloc] init];
-    title.frame = CGRectMake(0, 10, self.view.frame.size.width, 100);
+    title.frame = CGRectMake(0, 10, self.view.frame.size.width-15, 100);
     title.text = @"SKOL LIVE SITE";
     title.textColor = [UIColor whiteColor];
-    title.textAlignment = NSTextAlignmentCenter;
-    title.font = [UIFont fontWithName:@"Helvetica" size:25];
+    title.textAlignment = NSTextAlignmentRight;
+    title.font = [UIFont fontWithName:@"Helvetica-Bold" size:30];
     [scrollView addSubview:title];
     
     
@@ -537,18 +546,10 @@
     [pilotSwitch addTarget:self action:@selector(autoPilotStatus:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:pilotSwitch];
     
-    pilotNext = [[UILabel alloc] init];
-    pilotNext.frame = CGRectMake(10, pilotSwitch.frame.origin.y+pilotSwitch.frame.size.height + 10, self.view.frame.size.width - 20, 30);
-    pilotNext.text = @"Status...";
-    pilotNext.textColor = [UIColor darkGrayColor];
-    pilotNext.textAlignment = NSTextAlignmentLeft;
-    pilotNext.font = [UIFont fontWithName:@"Helvetica" size:13];
-    [scrollView addSubview:pilotNext];
-    
     
     //------------ Comandos Unicast
     UILabel *txtUnicast = [[UILabel alloc] init];
-    txtUnicast.frame = CGRectMake(10, pilotNext.frame.origin.y+pilotNext.frame.size.height+15, self.view.frame.size.width-20, 50);
+    txtUnicast.frame = CGRectMake(10, pilotSwitch.frame.origin.y+pilotSwitch.frame.size.height + 10, self.view.frame.size.width-20, 50);
     //txtUnicast.backgroundColor = [UIColor grayColor];
     txtUnicast.text = @"Unicast";
     txtUnicast.textColor = [UIColor blackColor];
@@ -559,12 +560,15 @@
     
     NSArray *walls = [[NSArray alloc] initWithObjects:@"top", @"left", @"right", @"front", nil];
     wallSelector = [[UISegmentedControl alloc] initWithItems:walls];
-    wallSelector.frame = CGRectMake(10, txtUnicast.frame.origin.y+txtUnicast.frame.size.height-5, 300, 40);
-    [wallSelector addTarget:self action:@selector(unicast:) forControlEvents:UIControlEventValueChanged];
+    [wallSelector setTintColor:[UIColor blackColor]];
+    wallSelector.frame = CGRectMake(10, txtUnicast.frame.origin.y+txtUnicast.frame.size.height-5, self.view.frame.size.width-20, 40);
+    //[wallSelector addTarget:self action:@selector(unicast:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:wallSelector];
     
+    float size = (self.view.frame.size.width-60)/4;
+    
     unicastX = [[UITextField alloc] init];
-    unicastX.frame = CGRectMake(10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, 50, 50);
+    unicastX.frame = CGRectMake(10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, size, 50);
     unicastX.backgroundColor = [UIColor whiteColor];
     unicastX.textColor = [UIColor darkGrayColor];
     unicastX.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -576,7 +580,7 @@
     [scrollView addSubview:unicastX];
     
     unicastY = [[UITextField alloc] init];
-    unicastY.frame = CGRectMake(10+50+10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, 50, 50);
+    unicastY.frame = CGRectMake(10+size+10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, size, 50);
     unicastY.backgroundColor = [UIColor whiteColor];
     unicastY.textColor = [UIColor darkGrayColor];
     unicastY.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -588,7 +592,7 @@
     [scrollView addSubview:unicastY];
     
     unicastCommand = [[UITextField alloc] init];
-    unicastCommand.frame = CGRectMake(10+50+10+50+10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, 70, 50);
+    unicastCommand.frame = CGRectMake(10+size+10+size+10, wallSelector.frame.origin.y+txtUnicast.frame.size.height+5, size, 50);
     unicastCommand.backgroundColor = [UIColor whiteColor];
     unicastCommand.textColor = [UIColor darkGrayColor];
     unicastCommand.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -600,7 +604,7 @@
     [scrollView addSubview:unicastCommand];
     
     UIButton *btnUnicast = [[UIButton alloc] init];
-    btnUnicast.frame = CGRectMake(10+50+10+50+10+70+20,wallSelector.frame.origin.y+txtUnicast.frame.size.height+10, 55, 40);
+    btnUnicast.frame = CGRectMake(10+size+10+size+10+size+20,wallSelector.frame.origin.y+txtUnicast.frame.size.height+10, size, 40);
     btnUnicast.backgroundColor = [UIColor blackColor];
     [btnUnicast setTitle:@"GO!" forState:UIControlStateNormal];
     btnUnicast.titleLabel.font = [UIFont fontWithName: @"Helvetica" size:14];
@@ -658,7 +662,7 @@
     [scrollView addSubview:txtTexts];
     
     scrollText = [[UITextField alloc] init];
-    scrollText.frame = CGRectMake(10, txtTexts.frame.origin.y+txtTexts.frame.size.height, 300, 40);
+    scrollText.frame = CGRectMake(10, txtTexts.frame.origin.y+txtTexts.frame.size.height, self.view.frame.size.width-20, 40);
     scrollText.backgroundColor = [UIColor whiteColor];
     scrollText.textColor = [UIColor darkGrayColor];
     scrollText.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -703,7 +707,7 @@
     
     
     scoreboardTxt1 = [[UITextField alloc] init];
-    scoreboardTxt1.frame = CGRectMake(10, txtScoreboard.frame.origin.y+txtScoreboard.frame.size.height, 300, 40);
+    scoreboardTxt1.frame = CGRectMake(10, txtScoreboard.frame.origin.y+txtScoreboard.frame.size.height, self.view.frame.size.width-20, 40);
     scoreboardTxt1.backgroundColor = [UIColor whiteColor];
     scoreboardTxt1.textColor = [UIColor darkGrayColor];
     scoreboardTxt1.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -714,7 +718,7 @@
     [scrollView addSubview:scoreboardTxt1];
     
     scoreboardTxt2 = [[UITextField alloc] init];
-    scoreboardTxt2.frame = CGRectMake(10, scoreboardTxt1.frame.origin.y+scoreboardTxt1.frame.size.height + 10, 300, 40);
+    scoreboardTxt2.frame = CGRectMake(10, scoreboardTxt1.frame.origin.y+scoreboardTxt1.frame.size.height + 10, self.view.frame.size.width-20, 40);
     scoreboardTxt2.backgroundColor = [UIColor whiteColor];
     scoreboardTxt2.textColor = [UIColor darkGrayColor];
     scoreboardTxt2.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -725,7 +729,7 @@
     [scrollView addSubview:scoreboardTxt2];
     
     scoreboardTxt3 = [[UITextField alloc] init];
-    scoreboardTxt3.frame = CGRectMake(10, scoreboardTxt2.frame.origin.y+scoreboardTxt2.frame.size.height + 10, 300, 40);
+    scoreboardTxt3.frame = CGRectMake(10, scoreboardTxt2.frame.origin.y+scoreboardTxt2.frame.size.height + 10, self.view.frame.size.width-20, 40);
     scoreboardTxt3.backgroundColor = [UIColor whiteColor];
     scoreboardTxt3.textColor = [UIColor darkGrayColor];
     scoreboardTxt3.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -736,7 +740,7 @@
     [scrollView addSubview:scoreboardTxt3];
     
     scoreboardTxt4 = [[UITextField alloc] init];
-    scoreboardTxt4.frame = CGRectMake(10, scoreboardTxt3.frame.origin.y+scoreboardTxt3.frame.size.height + 10, 300, 40);
+    scoreboardTxt4.frame = CGRectMake(10, scoreboardTxt3.frame.origin.y+scoreboardTxt3.frame.size.height + 10, self.view.frame.size.width-20, 40);
     scoreboardTxt4.backgroundColor = [UIColor whiteColor];
     scoreboardTxt4.textColor = [UIColor darkGrayColor];
     scoreboardTxt4.font = [UIFont fontWithName:@"Helvetica" size:15];
@@ -766,7 +770,8 @@
     
     NSArray *olas = [[NSArray alloc] initWithObjects:@"45º", @"45º U", @"Vertical", nil];
     olaSelect = [[UISegmentedControl alloc] initWithItems:olas];
-    olaSelect.frame = CGRectMake(10, txtOla.frame.origin.y+txtOla.frame.size.height-5, 300, 40);
+    [olaSelect setTintColor:[UIColor blackColor]];
+    olaSelect.frame = CGRectMake(10, txtOla.frame.origin.y+txtOla.frame.size.height-5, self.view.frame.size.width-20, 40);
     [olaSelect addTarget:self action:@selector(ola:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:olaSelect];
     
@@ -783,13 +788,15 @@
     
     NSArray *idles = [[NSArray alloc] initWithObjects:@"Random", @"Live", @"Breathe", @"Reel", nil];
     idleSelect1 = [[UISegmentedControl alloc] initWithItems:idles];
-    idleSelect1.frame = CGRectMake(10, txtIdle.frame.origin.y+txtIdle.frame.size.height-5, 300, 40);
+    [idleSelect1 setTintColor:[UIColor blackColor]];
+    idleSelect1.frame = CGRectMake(10, txtIdle.frame.origin.y+txtIdle.frame.size.height-5, self.view.frame.size.width-20, 40);
     [idleSelect1 addTarget:self action:@selector(idle1:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:idleSelect1];
     
     NSArray *idles2 = [[NSArray alloc] initWithObjects:@"Linear", @"Spiral", @"Brendas", nil];
     idleSelect2 = [[UISegmentedControl alloc] initWithItems:idles2];
-    idleSelect2.frame = CGRectMake(10, idleSelect1.frame.origin.y+idleSelect1.frame.size.height + 10, 300, 40);
+    [idleSelect2 setTintColor:[UIColor blackColor]];
+    idleSelect2.frame = CGRectMake(10, idleSelect1.frame.origin.y+idleSelect1.frame.size.height + 10, self.view.frame.size.width-20, 40);
     [idleSelect2 addTarget:self action:@selector(idle2:) forControlEvents:UIControlEventValueChanged];
     [scrollView addSubview:idleSelect2];
     
@@ -878,6 +885,17 @@
     
     
     scrollView.contentSize = CGSizeMake(self.view.frame.size.width, myoFollowSwitch.frame.origin.y+myoFollowSwitch.frame.size.height+15);
+    
+
+    pilotNext = [[UILabel alloc] init];
+    pilotNext.frame = CGRectMake(10, self.view.frame.size.height - 60, self.view.frame.size.width - 20, 50);
+    pilotNext.text = @"[Processor] Status...";
+    pilotNext.numberOfLines = 2;
+    pilotNext.textColor = [UIColor whiteColor];
+    pilotNext.backgroundColor = [UIColor darkGrayColor];
+    pilotNext.textAlignment = NSTextAlignmentCenter;
+    pilotNext.font = [UIFont fontWithName:@"Helvetica" size:15];
+    [self.view addSubview:pilotNext];
     
     UITapGestureRecognizer *singleFingerTap =
     [[UITapGestureRecognizer alloc] initWithTarget:self
