@@ -7,7 +7,9 @@
 //
 
 #import "ViewController.h"
+#import "Reachability.h"
 #import <MyoKit/MyoKit.h>
+#import <SystemConfiguration/CaptiveNetwork.h>
 
 @interface ViewController ()
 
@@ -371,22 +373,59 @@
     
 }
 
+- (NSString *)currentWifiSSID {
+    // Does not work on the simulator.
+    NSString *ssid = nil;
+    NSArray *ifs = (__bridge_transfer id)CNCopySupportedInterfaces();
+    for (NSString *ifnam in ifs) {
+        NSDictionary *info = (__bridge_transfer id)CNCopyCurrentNetworkInfo((__bridge CFStringRef)ifnam);
+        if (info[@"SSID"]) {
+            ssid = info[@"SSID"];
+        }
+    }
+    return ssid;
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
     
     self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
     
-    // initialize the socket.io connection
-    [SIOSocket socketWithHost: @"http://192.168.42.10:666" response: ^(SIOSocket *socket) {
-        clientSocket = socket;
-        
-        //check the correct event from the server
-        [clientSocket on:@"statuspilot" callback:^(SIOParameterArray *args) {
-            pilotNext.text = [args firstObject];
+    NSString *host = @"";
+    
+    Reachability *reachability = [Reachability reachabilityForInternetConnection];
+    [reachability startNotifier];
+    
+    NetworkStatus status = [reachability currentReachabilityStatus];
+    
+    if(status == NotReachable) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"OPS" message:@"Not able to connect to the server." preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *ok = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action){
+            [alert dismissViewControllerAnimated:YES completion:nil];
         }];
-        
-    }];
+        [alert addAction:ok];
+        [self presentViewController:alert animated:YES completion:nil];
+    } else if (status == ReachableViaWiFi) {
+        if ([[self currentWifiSSID] isEqualToString:@"Lira"]) {
+            host = @"http://192.168.0.103:3000";
+        } else {
+            host = @"http://192.168.42.10:3000";
+        }
+    } else if (status == ReachableViaWWAN) {
+        host = @"http://138.68.62.139:666";
+    }
+    
+    if ([host length] > 0) {
+        // initialize the socket.io connection
+        [SIOSocket socketWithHost:host reconnectAutomatically:YES attemptLimit:10 withDelay:5 maximumDelay:10 timeout:60 response: ^(SIOSocket *socket) {
+            clientSocket = socket;
+            
+            //check the correct event from the server
+            [clientSocket on:@"statuspilot" callback:^(SIOParameterArray *args) {
+                pilotNext.text = [args firstObject];
+            }];
+        }];
+    }
     
     // initialize the myo notifications on notification center
     // Data notifications are received through NSNotificationCenter.
